@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Ajax Proxy Monitor</title>
+    <link rel="stylesheet" href="monitor.css" />
+  </head>
+  <body>
+    <main class="layout">
+      <header class="hero panel">
+        <div>
+          <h1>Ajax Proxy Monitor</h1>
+          <p class="sub">
+            Tab <strong id="tabIdText">-</strong>
+            <span id="statusBadge" class="badge off">OFF</span>
+          </p>
+        </div>
+        <label class="switch" for="toggleEnabled">
+          <span>代理开关</span>
+          <input id="toggleEnabled" type="checkbox" />
+        </label>
+      </header>
+
+      <section class="panel toolbar">
+        <input id="searchInput" type="text" placeholder="搜索 URL / 方法 / 状态 / 日志内容" />
+        <button id="refreshBtn" type="button">刷新</button>
+        <button id="clearLogsBtn" class="danger" type="button">清空日志</button>
+      </section>
+
+      <p id="flashText" class="flash"></p>
+
+      <section class="panel">
+        <h2>请求日志</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>时间</th>
+                <th>类型</th>
+                <th>阶段</th>
+                <th>方法</th>
+                <th>状态</th>
+                <th>URL / 说明</th>
+              </tr>
+            </thead>
+            <tbody id="logsBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="split">
+        <section class="panel">
+          <h2>HTTP 规则</h2>
+          <form id="httpRuleForm" class="rule-form">
+            <label>
+              规则名称
+              <input name="name" type="text" value="http-rule" required />
+            </label>
+            <label>
+              URL 匹配（支持 `*` 或 `/regex/`）
+              <input name="urlPattern" type="text" placeholder="/api/user 或 */api/*" required />
+            </label>
+            <label>
+              资源类型（逗号分隔）
+              <input name="resourceTypes" type="text" value="XHR,Fetch,Script,Stylesheet,Document,WebSocket" />
+            </label>
+            <div class="cols2">
+              <label>
+                拦截阶段
+                <select name="stage">
+                  <option value="request">request</option>
+                  <option value="response">response</option>
+                </select>
+              </label>
+              <label>
+                操作方式
+                <select name="operation">
+                  <option value="fulfill">fulfill(返回自定义响应)</option>
+                  <option value="replace">replace(替换响应数据)</option>
+                </select>
+              </label>
+            </div>
+            <div class="cols2">
+              <label>
+                状态码
+                <input name="statusCode" type="number" value="200" min="100" max="599" />
+              </label>
+              <label>
+                Content-Type
+                <input name="contentType" type="text" value="application/json; charset=utf-8" />
+              </label>
+            </div>
+            <label>
+              <input name="useRegex" type="checkbox" />
+              替换时使用正则（作用于 `replaceFrom`）
+            </label>
+            <div class="cols2">
+              <label>
+                replaceFrom
+                <input name="replaceFrom" type="text" placeholder="oldValue / /token\\w+/g" />
+              </label>
+              <label>
+                replaceTo
+                <input name="replaceTo" type="text" placeholder="newValue" />
+              </label>
+            </div>
+            <label>
+              responseBody（JSON/JS/CSS/文本）
+              <textarea name="responseBody" rows="6" placeholder='{"code":0,"data":{"mock":true}}'></textarea>
+            </label>
+            <button type="submit">新增 HTTP 规则</button>
+          </form>
+          <div id="httpRulesList" class="rules-list"></div>
+        </section>
+
+        <section class="panel">
+          <h2>WebSocket 规则</h2>
+          <form id="wsRuleForm" class="rule-form">
+            <label>
+              规则名称
+              <input name="name" type="text" value="ws-rule" required />
+            </label>
+            <label>
+              WS URL 匹配（支持 `*` 或 `/regex/`）
+              <input name="urlPattern" type="text" placeholder="wss://example.com/socket" required />
+            </label>
+            <label>
+              <input name="useRegex" type="checkbox" />
+              入站/出站替换使用正则
+            </label>
+            <div class="cols2">
+              <label>
+                outgoingFind
+                <input name="outgoingFind" type="text" placeholder="client_keyword" />
+              </label>
+              <label>
+                outgoingReplace
+                <input name="outgoingReplace" type="text" placeholder="new_client_keyword" />
+              </label>
+            </div>
+            <div class="cols2">
+              <label>
+                incomingFind
+                <input name="incomingFind" type="text" placeholder="server_keyword" />
+              </label>
+              <label>
+                incomingReplace
+                <input name="incomingReplace" type="text" placeholder="new_server_keyword" />
+              </label>
+            </div>
+            <button type="submit">新增 WS 规则</button>
+          </form>
+          <div id="wsRulesList" class="rules-list"></div>
+        </section>
+      </section>
+    </main>
+
+    <script src="monitor.js"></script>
+  </body>
+</html>

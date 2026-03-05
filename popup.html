@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Ajax Proxy</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="popup">
+      <h1>Ajax Proxy</h1>
+      <p id="tabInfo" class="muted">正在读取当前标签页...</p>
+
+      <label class="toggle-row" for="toggleEnabled">
+        <span>开启当前标签页代理</span>
+        <input id="toggleEnabled" type="checkbox" />
+      </label>
+
+      <button id="openMonitor" class="primary" type="button">打开监控面板</button>
+      <p id="statusText" class="muted"></p>
+    </main>
+    <script src="popup.js"></script>
+  </body>
+</html>

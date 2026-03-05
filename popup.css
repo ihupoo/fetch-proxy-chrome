@@ -1,0 +1,72 @@
+:root {
+  --bg: #112031;
+  --card: #1b2a41;
+  --text: #f4f6f8;
+  --muted: #b9c4d0;
+  --accent: #38b000;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 220px;
+  font-family: "Space Grotesk", "Noto Sans SC", sans-serif;
+  color: var(--text);
+  background: radial-gradient(circle at 20% 20%, #203a57, var(--bg));
+}
+
+.popup {
+  padding: 16px;
+}
+
+h1 {
+  margin: 0 0 8px;
+  font-size: 20px;
+  letter-spacing: 0.02em;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 8px 0;
+}
+
+.toggle-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 13px;
+  margin: 12px 0;
+}
+
+input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+
+button {
+  width: 100%;
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+button.primary {
+  background: linear-gradient(120deg, #40916c, #2d6a4f);
+  color: #fff;
+}
+
+button.primary:hover {
+  filter: brightness(1.06);
+}
