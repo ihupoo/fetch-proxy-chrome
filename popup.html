@@ -1,24 +1,58 @@
 <!doctype html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Ajax Proxy</title>
-    <link rel="stylesheet" href="popup.css" />
-  </head>
-  <body>
-    <main class="popup">
-      <h1>Ajax Proxy</h1>
-      <p id="tabInfo" class="muted">正在读取当前标签页...</p>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ajax Proxy</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="popup">
+    <header class="header">
+      <div class="header-left">
+        <div class="logo">AP</div>
+        <div>
+          <h1 class="title">Ajax Proxy</h1>
+          <p class="version">v2.0.0</p>
+        </div>
+      </div>
+      <div class="toggle-wrap">
+        <label class="toggle" for="toggleEnabled">
+          <input id="toggleEnabled" type="checkbox" />
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </header>
 
-      <label class="toggle-row" for="toggleEnabled">
-        <span>开启当前标签页代理</span>
-        <input id="toggleEnabled" type="checkbox" />
-      </label>
+    <section class="tab-info">
+      <p id="tabInfo" class="tab-label">正在读取...</p>
+      <p id="tabUrl" class="tab-url"></p>
+    </section>
 
-      <button id="openMonitor" class="primary" type="button">打开监控面板</button>
-      <p id="statusText" class="muted"></p>
-    </main>
-    <script src="popup.js"></script>
-  </body>
+    <section class="mode-section">
+      <p class="section-label">运行模式</p>
+      <div class="mode-group">
+        <label class="mode-pill active" data-mode-card="quick">
+          <input type="radio" name="runMode" value="quick" checked />
+          <span>快捷模式</span>
+        </label>
+        <label class="mode-pill" data-mode-card="full">
+          <input type="radio" name="runMode" value="full" />
+          <span>全量模式</span>
+        </label>
+      </div>
+      <p id="modeHint" class="mode-hint"></p>
+    </section>
+
+    <section class="actions">
+      <button id="openMonitor" class="btn-primary" type="button">打开监控面板</button>
+    </section>
+
+    <footer class="footer">
+      <span id="statusBadge" class="badge off">OFF</span>
+      <span id="statusText" class="status-text">代理已关闭</span>
+    </footer>
+  </div>
+  <script src="popup.js"></script>
+</body>
 </html>

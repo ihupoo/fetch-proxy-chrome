@@ -1,161 +1,464 @@
 <!doctype html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Ajax Proxy Monitor</title>
-    <link rel="stylesheet" href="monitor.css" />
-  </head>
-  <body>
-    <main class="layout">
-      <header class="hero panel">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ajax Proxy Monitor</title>
+  <link rel="stylesheet" href="monitor.css" />
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-left">
+        <div class="logo">AP</div>
         <div>
-          <h1>Ajax Proxy Monitor</h1>
-          <p class="sub">
-            Tab <strong id="tabIdText">-</strong>
-            <span id="statusBadge" class="badge off">OFF</span>
-          </p>
+          <h1 class="header-title">Ajax Proxy</h1>
+          <p class="header-sub">Tab <strong id="tabIdText">-</strong> · <span id="tabHostText">-</span></p>
         </div>
-        <label class="switch" for="toggleEnabled">
-          <span>代理开关</span>
-          <input id="toggleEnabled" type="checkbox" />
-        </label>
-      </header>
-
-      <section class="panel toolbar">
-        <input id="searchInput" type="text" placeholder="搜索 URL / 方法 / 状态 / 日志内容" />
-        <button id="refreshBtn" type="button">刷新</button>
-        <button id="clearLogsBtn" class="danger" type="button">清空日志</button>
-      </section>
-
-      <p id="flashText" class="flash"></p>
-
-      <section class="panel">
-        <h2>请求日志</h2>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>时间</th>
-                <th>类型</th>
-                <th>阶段</th>
-                <th>方法</th>
-                <th>状态</th>
-                <th>URL / 说明</th>
-              </tr>
-            </thead>
-            <tbody id="logsBody"></tbody>
-          </table>
+      </div>
+      <div class="header-right">
+        <div class="mode-switch">
+          <button class="mode-btn active" data-mode="quick" id="modeQuickBtn">快捷模式</button>
+          <button class="mode-btn" data-mode="full" id="modeFullBtn">全量模式</button>
         </div>
-      </section>
+        <div class="header-divider"></div>
+        <div class="proxy-toggle">
+          <span class="proxy-label" id="proxyLabel">代理状态</span>
+          <label class="toggle" for="toggleEnabled">
+            <input id="toggleEnabled" type="checkbox" />
+            <span class="toggle-slider"></span>
+          </label>
+          <span class="proxy-status" id="proxyStatus">OFF</span>
+        </div>
+      </div>
+    </header>
 
-      <section class="split">
-        <section class="panel">
-          <h2>HTTP 规则</h2>
-          <form id="httpRuleForm" class="rule-form">
-            <label>
-              规则名称
-              <input name="name" type="text" value="http-rule" required />
-            </label>
-            <label>
-              URL 匹配（支持 `*` 或 `/regex/`）
-              <input name="urlPattern" type="text" placeholder="/api/user 或 */api/*" required />
-            </label>
-            <label>
-              资源类型（逗号分隔）
-              <input name="resourceTypes" type="text" value="XHR,Fetch,Script,Stylesheet,Document,WebSocket" />
-            </label>
-            <div class="cols2">
-              <label>
-                拦截阶段
-                <select name="stage">
-                  <option value="request">request</option>
-                  <option value="response">response</option>
-                </select>
-              </label>
-              <label>
-                操作方式
-                <select name="operation">
-                  <option value="fulfill">fulfill(返回自定义响应)</option>
-                  <option value="replace">replace(替换响应数据)</option>
-                </select>
-              </label>
-            </div>
-            <div class="cols2">
-              <label>
-                状态码
-                <input name="statusCode" type="number" value="200" min="100" max="599" />
-              </label>
-              <label>
-                Content-Type
-                <input name="contentType" type="text" value="application/json; charset=utf-8" />
-              </label>
-            </div>
-            <label>
-              <input name="useRegex" type="checkbox" />
-              替换时使用正则（作用于 `replaceFrom`）
-            </label>
-            <div class="cols2">
-              <label>
-                replaceFrom
-                <input name="replaceFrom" type="text" placeholder="oldValue / /token\\w+/g" />
-              </label>
-              <label>
-                replaceTo
-                <input name="replaceTo" type="text" placeholder="newValue" />
-              </label>
-            </div>
-            <label>
-              responseBody（JSON/JS/CSS/文本）
-              <textarea name="responseBody" rows="6" placeholder='{"code":0,"data":{"mock":true}}'></textarea>
-            </label>
-            <button type="submit">新增 HTTP 规则</button>
-          </form>
-          <div id="httpRulesList" class="rules-list"></div>
-        </section>
+    <!-- Main -->
+    <main class="main">
+      <!-- Left: Request Logs -->
+      <aside class="sidebar">
+        <div class="sidebar-search">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input id="searchInput" type="text" placeholder="搜索请求..." />
+        </div>
+        <div class="sidebar-toolbar">
+          <div class="filter-pills">
+            <button class="filter-pill active" data-filter="all">All</button>
+            <button class="filter-pill" data-filter="http">HTTP</button>
+            <button class="filter-pill" data-filter="ws">WS</button>
+            <button class="filter-pill" data-filter="proxy">Proxy</button>
+          </div>
+          <button class="icon-btn" id="clearLogsBtn" title="清空日志">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 14.14 14.14"/></svg>
+          </button>
+        </div>
+        <div class="log-list" id="logList">
+          <p class="empty-text">暂无日志</p>
+        </div>
+        <div class="sidebar-footer">
+          <span id="logCount">0 条日志</span>
+          <button class="icon-btn" id="refreshBtn" title="刷新">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/><path d="M16 16h5v5"/></svg>
+          </button>
+        </div>
+      </aside>
 
-        <section class="panel">
-          <h2>WebSocket 规则</h2>
-          <form id="wsRuleForm" class="rule-form">
-            <label>
-              规则名称
-              <input name="name" type="text" value="ws-rule" required />
-            </label>
-            <label>
-              WS URL 匹配（支持 `*` 或 `/regex/`）
-              <input name="urlPattern" type="text" placeholder="wss://example.com/socket" required />
-            </label>
-            <label>
-              <input name="useRegex" type="checkbox" />
-              入站/出站替换使用正则
-            </label>
-            <div class="cols2">
-              <label>
-                outgoingFind
-                <input name="outgoingFind" type="text" placeholder="client_keyword" />
-              </label>
-              <label>
-                outgoingReplace
-                <input name="outgoingReplace" type="text" placeholder="new_client_keyword" />
-              </label>
+      <!-- Right: Config Area -->
+      <section class="content">
+        <!-- Tab Bar -->
+        <div class="tab-bar">
+          <button class="tab-btn active" data-tab="http" id="tabHttpBtn">HTTP 规则</button>
+          <button class="tab-btn" data-tab="ws" id="tabWsBtn">WebSocket 规则</button>
+          <button class="tab-btn" data-tab="detail" id="tabDetailBtn">日志详情</button>
+        </div>
+
+        <!-- HTTP Rules Panel -->
+        <div class="tab-panel active" id="panelHttp">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">HTTP 拦截规则</h2>
+              <p class="panel-desc">request 阶段直接返回自定义 response (Mock)；response 阶段替换原始响应内容。</p>
             </div>
-            <div class="cols2">
-              <label>
-                incomingFind
-                <input name="incomingFind" type="text" placeholder="server_keyword" />
-              </label>
-              <label>
-                incomingReplace
-                <input name="incomingReplace" type="text" placeholder="new_server_keyword" />
-              </label>
+            <button class="btn-primary btn-sm" id="addHttpRuleBtn">+ 添加规则</button>
+          </div>
+
+          <!-- HTTP Rule Form (hidden by default) -->
+          <div class="rule-form-card hidden" id="httpRuleFormCard">
+            <div class="form-card-header">
+              <h3 id="httpFormTitle">新建 HTTP 规则</h3>
+              <button class="icon-btn" id="httpFormCloseBtn" title="关闭">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </button>
             </div>
-            <button type="submit">新增 WS 规则</button>
-          </form>
-          <div id="wsRulesList" class="rules-list"></div>
-        </section>
+            <form id="httpRuleForm" class="rule-form">
+              <input type="hidden" name="id" value="" />
+              <div class="form-row-2">
+                <label class="form-label">
+                  <span>规则名称</span>
+                  <input name="name" type="text" value="http-rule" required />
+                </label>
+                <label class="form-label">
+                  <span>URL 匹配 (支持 * 或 /regex/)</span>
+                  <input name="urlPattern" type="text" placeholder="*/api/user*" required />
+                </label>
+              </div>
+              <div class="form-row-2">
+                <label class="form-label">
+                  <span>处理阶段</span>
+                  <select name="stage" id="httpStageSelect">
+                    <option value="request">request (请求前)</option>
+                    <option value="response">response (响应后)</option>
+                  </select>
+                </label>
+                <label class="form-label" id="httpOperationLabel">
+                  <span>操作方式</span>
+                  <select name="operation" id="httpOperationSelect">
+                    <option value="fulfill">Mock (直接返回)</option>
+                    <option value="replace">Replace (替换响应)</option>
+                  </select>
+                </label>
+              </div>
+              <div class="form-row-2" id="httpStatusRow">
+                <label class="form-label">
+                  <span>状态码</span>
+                  <input name="statusCode" type="number" value="200" min="100" max="599" />
+                </label>
+                <label class="form-label">
+                  <span>Content-Type</span>
+                  <input name="contentType" type="text" value="application/json; charset=utf-8" />
+                </label>
+              </div>
+              <div class="form-row-2 replace-row" id="httpReplaceRow" style="display:none">
+                <label class="form-label">
+                  <span class="label-with-help">
+                    <span>查找文本 (replaceFrom)</span>
+                    <button type="button" class="help-icon-btn" id="replaceHelpBtn" title="查看 Replace 规则说明" aria-label="查看 Replace 规则说明">?</button>
+                  </span>
+                  <input name="replaceFrom" type="text" placeholder="oldValue" />
+                </label>
+                <label class="form-label">
+                  <span>替换为 (replaceTo)</span>
+                  <input name="replaceTo" type="text" placeholder="newValue" />
+                </label>
+              </div>
+              <div class="form-row-inline" id="httpResponseModeRow">
+                <label class="form-label">
+                  <span>响应生成方式</span>
+                  <select name="responseMode" id="httpResponseModeSelect">
+                    <option value="plain">Plain Text / JSON</option>
+                    <option value="mock">MockJS-like Template</option>
+                  </select>
+                </label>
+              </div>
+              <label class="form-label" id="httpResponseBodyLabel">
+                <span class="label-with-help">
+                  <span>响应体 (responseBody)</span>
+                  <button type="button" class="help-icon-btn" id="mockSyntaxHelpBtn" title="查看 Mock 语法说明" aria-label="查看 Mock 语法说明">?</button>
+                </span>
+                <textarea name="responseBody" rows="5" placeholder='{"code":0,"message":"ok","data":{"name":"demo"}}'></textarea>
+              </label>
+              <div class="form-actions">
+                <button type="button" class="btn-ghost" id="httpFormCancelBtn">取消</button>
+                <button type="submit" class="btn-primary">保存规则</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- HTTP Rules List -->
+          <div class="rules-list" id="httpRulesList">
+            <p class="empty-text">暂无 HTTP 规则，点击上方按钮添加</p>
+          </div>
+        </div>
+
+        <!-- WS Rules Panel -->
+        <div class="tab-panel" id="panelWs">
+          <div class="panel-header">
+            <div>
+              <h2 class="panel-title">WebSocket 规则</h2>
+              <p class="panel-desc">拦截并修改 WebSocket 发送/接收的消息内容。查找/替换作用于整段消息文本。</p>
+            </div>
+            <button class="btn-primary btn-sm" id="addWsRuleBtn">+ 添加规则</button>
+          </div>
+
+          <!-- WS Rule Form -->
+          <div class="rule-form-card hidden" id="wsRuleFormCard">
+            <div class="form-card-header">
+              <h3 id="wsFormTitle">新建 WS 规则</h3>
+              <button class="icon-btn" id="wsFormCloseBtn" title="关闭">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+              </button>
+            </div>
+            <form id="wsRuleForm" class="rule-form">
+              <input type="hidden" name="id" value="" />
+              <div class="form-row-2">
+                <label class="form-label">
+                  <span>规则名称</span>
+                  <input name="name" type="text" value="ws-rule" required />
+                </label>
+                <label class="form-label">
+                  <span>匹配连接地址 (支持 * 或 /regex/)</span>
+                  <input name="urlPattern" type="text" placeholder="wss://example.com/socket" required />
+                </label>
+              </div>
+              <div class="form-row-2">
+                <label class="form-label">
+                  <span class="label-with-help">
+                    <span>Outgoing 查找 (客户端发出)</span>
+                    <button type="button" class="help-icon-btn" id="wsRuleHelpBtn" title="查看 WebSocket 规则说明" aria-label="查看 WebSocket 规则说明">?</button>
+                  </span>
+                  <input name="outgoingFind" type="text" placeholder="client_keyword" />
+                </label>
+                <label class="form-label">
+                  <span>Outgoing 替换为</span>
+                  <input name="outgoingReplace" type="text" placeholder="new_client_keyword" />
+                </label>
+              </div>
+              <div class="form-row-2">
+                <label class="form-label">
+                  <span>Incoming 查找 (服务端返回)</span>
+                  <input name="incomingFind" type="text" placeholder="server_keyword" />
+                </label>
+                <label class="form-label">
+                  <span>Incoming 替换为</span>
+                  <input name="incomingReplace" type="text" placeholder="new_server_keyword" />
+                </label>
+              </div>
+              <div class="form-actions">
+                <button type="button" class="btn-ghost" id="wsFormCancelBtn">取消</button>
+                <button type="submit" class="btn-primary">保存规则</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- WS Rules List -->
+          <div class="rules-list" id="wsRulesList">
+            <p class="empty-text">暂无 WS 规则</p>
+          </div>
+
+          <!-- WS Send Form -->
+          <div class="ws-send-card" id="wsSendCard">
+            <h3 class="card-title">主动发送信令</h3>
+            <form id="wsSendForm" class="rule-form">
+              <label class="form-label">
+                <span>目标连接地址 (留空表示第一条可用连接)</span>
+                <input id="wsSendUrlPattern" type="text" placeholder="wss://example.com/socket" />
+              </label>
+              <label class="form-label">
+                <span>发送内容</span>
+                <textarea id="wsSendPayload" rows="3" placeholder='{"type":"ping"}'></textarea>
+              </label>
+              <div class="form-actions">
+                <button type="submit" class="btn-primary btn-sm" data-ws-submit-mode="send">发送到服务端</button>
+                <button type="submit" class="btn-ghost btn-sm" data-ws-submit-mode="mock-incoming">模拟服务端下发</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Detail Panel -->
+        <div class="tab-panel" id="panelDetail">
+          <div class="panel-header">
+            <h2 class="panel-title" id="detailTitle">日志详情</h2>
+          </div>
+          <div class="detail-box" id="detailBody"><p class="empty-text">点击左侧日志查看详情</p></div>
+        </div>
       </section>
     </main>
 
-    <script src="monitor.js"></script>
-  </body>
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-left">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="footerStatus">系统就绪</span>
+      </div>
+      <div class="footer-right">
+        <span id="footerStats"></span>
+        <span class="footer-version">v2.0.0</span>
+      </div>
+    </footer>
+  </div>
+
+  <div class="modal-overlay hidden" id="mockSyntaxModal" aria-hidden="true">
+    <div class="modal-card modal-lg" role="dialog" aria-modal="true" aria-labelledby="mockSyntaxModalTitle">
+      <div class="modal-header">
+        <div>
+          <h3 id="mockSyntaxModalTitle">Mock 语法说明</h3>
+          <p>适用于 HTTP 规则中的 <code>MockJS-like Template</code> 模式。</p>
+        </div>
+        <button type="button" class="icon-btn" id="mockSyntaxModalCloseBtn" title="关闭">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="doc-block">
+          <h4>使用步骤</h4>
+          <p>1. 将“响应生成方式”切到 <code>MockJS-like Template</code>。</p>
+          <p>2. 在 <code>responseBody</code> 中填写合法 JSON 模板。</p>
+          <p>3. 规则在 <code>quick</code> / <code>full</code> 模式下都会按模板动态生成响应。</p>
+        </div>
+        <div class="doc-block">
+          <h4>属性规则</h4>
+          <p><code>name|18-40</code>：生成整数区间值。</p>
+          <p><code>score|1-100.1-2</code>：生成浮点数，整数部分范围 1-100，小数位 1-2 位。</p>
+          <p><code>id|+1</code>：按步长递增。</p>
+          <p><code>list|2-4</code>：数组生成 2 到 4 项。</p>
+          <p><code>type|1</code>：从数组中随机选 1 项返回。</p>
+        </div>
+        <div class="doc-block">
+          <h4>占位符</h4>
+          <p>支持：<code>@guid</code> <code>@uuid</code> <code>@cname</code> <code>@name</code> <code>@integer(1,100)</code> <code>@float(1,100,1,2)</code></p>
+          <p>也支持：<code>@pick('open','closed')</code> <code>@word</code> <code>@sentence</code> <code>@paragraph</code> <code>@date</code> <code>@time</code> <code>@datetime</code></p>
+          <p>网络相关：<code>@email</code> <code>@url</code> <code>@domain</code> <code>@ip</code> <code>@color</code></p>
+        </div>
+        <div class="doc-block">
+          <h4>示例 1：用户列表</h4>
+          <pre class="doc-code">{
+  "code": 0,
+  "message": "ok",
+  "data|2-4": [
+    {
+      "id|+1": 1000,
+      "name": "@cname",
+      "age|18-40": 1,
+      "email": "@email",
+      "status": "@pick('enabled','disabled')"
+    }
+  ]
+}</pre>
+        </div>
+        <div class="doc-block">
+          <h4>示例 2：分页结果</h4>
+          <pre class="doc-code">{
+  "code": 0,
+  "page": 1,
+  "pageSize": 10,
+  "total|80-120": 1,
+  "list|5-10": [
+    {
+      "orderId": "@guid",
+      "title": "@sentence",
+      "amount|50-500.1-2": 1,
+      "createdAt": "@datetime"
+    }
+  ]
+}</pre>
+        </div>
+        <div class="doc-block">
+          <h4>注意</h4>
+          <p>模板内容必须是合法 JSON，不能直接写 JS 表达式或函数。</p>
+          <p>当前不是完整 <code>mockjs</code> 官方实现，而是兼容常用语法的轻量版本。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay hidden" id="replaceHelpModal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="replaceHelpModalTitle">
+      <div class="modal-header">
+        <div>
+          <h3 id="replaceHelpModalTitle">Replace 规则说明</h3>
+          <p>当“操作方式”选择 <code>Replace (替换响应)</code> 时，规则会基于原始响应内容做文本替换。</p>
+        </div>
+        <button type="button" class="icon-btn" id="replaceHelpModalCloseBtn" title="关闭">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="doc-block">
+          <h4>生效方式</h4>
+          <p>系统会先拿到接口原始响应体，再把其中所有出现的 <code>replaceFrom</code> 文本替换成 <code>replaceTo</code>。</p>
+          <p>当前是普通字符串替换，不是正则替换，也不会解析 <code>mock</code> 模板。</p>
+          <p>如果没有填写 <code>replaceFrom</code>，但填写了响应体，那么会直接用响应体整体覆盖原始响应。</p>
+        </div>
+        <div class="doc-block">
+          <h4>示例 1：替换 JSON 里的字段值</h4>
+          <pre class="doc-code">原始响应:
+{"status":"offline","name":"demo-user"}
+
+replaceFrom:
+offline
+
+replaceTo:
+online
+
+结果:
+{"status":"online","name":"demo-user"}</pre>
+        </div>
+        <div class="doc-block">
+          <h4>示例 2：替换整段文本</h4>
+          <pre class="doc-code">原始响应:
+hello demo world
+
+replaceFrom:
+demo
+
+replaceTo:
+ajax-proxy
+
+结果:
+hello ajax-proxy world</pre>
+        </div>
+        <div class="doc-block">
+          <h4>注意</h4>
+          <p>这是纯文本替换，所以 JSON、HTML、JS、普通文本都可以用，但必须保证替换后的内容仍然是你期望的格式。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay hidden" id="wsRuleHelpModal" aria-hidden="true">
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="wsRuleHelpModalTitle">
+      <div class="modal-header">
+        <div>
+          <h3 id="wsRuleHelpModalTitle">WebSocket 规则说明</h3>
+          <p>WS 规则按消息方向做纯文本替换，不区分消息是不是 JSON。</p>
+        </div>
+        <button type="button" class="icon-btn" id="wsRuleHelpModalCloseBtn" title="关闭">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="doc-block">
+          <h4>生效方式</h4>
+          <p><code>Outgoing</code> 表示客户端发出的消息。命中后，会在消息真正发出前，把其中的 <code>outgoingFind</code> 替换成 <code>outgoingReplace</code>。</p>
+          <p><code>Incoming</code> 表示服务端返回给页面的消息。命中后，会在页面收到消息前，把其中的 <code>incomingFind</code> 替换成 <code>incomingReplace</code>。</p>
+          <p>当前是普通字符串替换，不是正则，也不会解析 mock 模板。</p>
+        </div>
+        <div class="doc-block">
+          <h4>示例 1：改写客户端发出的订阅参数</h4>
+          <pre class="doc-code">客户端原始发送:
+{"action":"subscribe","room":"room-a"}
+
+outgoingFind:
+room-a
+
+outgoingReplace:
+room-b
+
+实际发出:
+{"action":"subscribe","room":"room-b"}</pre>
+        </div>
+        <div class="doc-block">
+          <h4>示例 2：改写服务端返回状态</h4>
+          <pre class="doc-code">服务端原始返回:
+{"type":"status","value":"offline"}
+
+incomingFind:
+offline
+
+incomingReplace:
+online
+
+页面最终收到:
+{"type":"status","value":"online"}</pre>
+        </div>
+        <div class="doc-block">
+          <h4>注意</h4>
+          <p>如果查找文本为空，对应方向就不会做替换。</p>
+          <p>替换发生在文本层，所以请确保替换后仍然符合你的业务协议格式。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Flash Message -->
+  <div class="flash-container" id="flashContainer"></div>
+
+  <script src="monitor.js"></script>
+</body>
 </html>

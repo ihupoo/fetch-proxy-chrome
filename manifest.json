@@ -1,21 +1,22 @@
 {
   "manifest_version": 3,
-  "name": "Ajax Proxy Devtool",
-  "description": "Toggle proxy interception for XHR/Fetch/static assets and WebSocket with custom response mocking.",
-  "version": "1.0.0",
+  "name": "Ajax Proxy",
+  "description": "Ajax代理拦截器 - 支持请求拦截、响应改写、WebSocket调试",
+  "version": "2.0.0",
   "permissions": [
     "storage",
     "tabs",
     "activeTab",
     "debugger",
-    "scripting"
+    "scripting",
+    "declarativeNetRequest",
+    "declarativeNetRequestWithHostAccess"
   ],
   "host_permissions": [
     "<all_urls>"
   ],
   "background": {
-    "service_worker": "background.js",
-    "type": "module"
+    "service_worker": "background.js"
   },
   "action": {
     "default_popup": "popup.html",
@@ -35,6 +36,7 @@
   "web_accessible_resources": [
     {
       "resources": [
+        "inpage-http.js",
         "inpage-ws.js"
       ],
       "matches": [
